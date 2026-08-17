@@ -37,6 +37,16 @@ def prep(d):
     d = d.copy()
     d["braak_n"] = d.Braak.map(braak_num)
     d["logumi"] = np.log10(d.umis.clip(lower=1))
+    # NOTE ON POSITIVITY -- read before modifying.
+    # The `reln`/`rorb` columns of the SEA-AD extracts are DEPTH-NORMALISED,
+    # TRUNCATED expression values, not raw UMI counts. `> 0` is therefore a
+    # normalised-expression threshold, equivalent to roughly >=7 raw transcripts
+    # at this cohort's median depth (~17,891 UMIs), giving RELN+ 13.3% / RORB+ 20.2%
+    # of MEC excitatory nuclei. This is NOT the same rule as the Leng scripts
+    # (01/03/09/12/13/14), which threshold genuine raw counts at >= 1.
+    # Diagnostic: under a raw-count rule detection rises steeply with library size;
+    # in these columns RELN detection is flat and RORB detection FALLS with depth.
+    # See README.md ("Statistical approach") and DATA.md.
     d["reln_pos"] = (d.reln > 0).astype(int)
     d["rorb_pos"] = (d.rorb > 0).astype(int)
     return d.dropna(subset=["braak_n"])
