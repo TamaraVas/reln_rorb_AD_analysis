@@ -1,0 +1,14 @@
+# data (large / access-controlled — see DATA.md)
+data/
+*.h5ad
+*.parquet
+# outputs
+*.png
+*.csv
+!analysis/**/*.py
+# python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+# numba cache
+/tmp/nb/
