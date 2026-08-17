@@ -1,0 +1,19 @@
+name: reln-rorb
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.11
+  - numpy=2.4.*
+  - pandas=2.3.*
+  - scipy=1.17.*
+  - statsmodels=0.14.*
+  - scikit-learn=1.9.*
+  - anndata=0.12.*
+  - h5py=3.16.*
+  - matplotlib=3.11.*
+  - pip
+  - pip:
+      - cellxgene-census==1.18.0   # data access (scripts 01/11 and DATA.md fetch)
+      - squidpy==1.8.2             # script 15 only (spatial cross-check)
+      - scanpy==1.11.5             # pulled in by squidpy

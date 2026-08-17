@@ -1,0 +1,14 @@
+# Core analysis (scripts 01-14)
+numpy==2.4.6
+pandas==2.3.3
+scipy==1.17.1
+statsmodels==0.14.6
+scikit-learn==1.9.0
+anndata==0.12.19
+h5py==3.16.0
+matplotlib==3.11.0
+# Data access (fetch steps in DATA.md; scripts 01, 11)
+cellxgene-census==1.18.0
+# Spatial cross-check (script 15 only)
+squidpy==1.8.2
+scanpy==1.11.5
