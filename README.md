@@ -48,6 +48,10 @@ and 14 consumes `staged_ec_all_regions.json`, both produced by 04).
 | `22_directionality_replication.py` | Why no directional claim is made: the acquisition asymmetry reverses between cohorts while the convergence replicates | §3.12, §4.1 |
 | `23_census_dataset_provenance.py` | Enumerates the constituent CELLxGENE Census datasets behind the cross-disorder comparison with their collection DOIs; re-derives the allocortex coverage claim | §3.11, Supp. Table S1 |
 | `24_merfish_detection_controls.py` | Measures MERFISH detection error from the object's own control channels; shows decoding noise attenuates rather than creates the co-localization, and tests segmentation spillover | §3.8 |
+| `25_multiregion_extract.py` | Streams the SEA-AD 2026 ten-region release (161 GB), extracts RELN/RORB + per-nucleus QC to small parquets; refuses the 2022 Reference-MTG object by filename | §2, DATA.md |
+| `26_regional_subclass_analysis.py` | Ten-region convergence in two donor cohorts, then **within subclass**: the convergence is entorhinal-IT, MTG's region-level signal is in the L4 IT control. Includes the same-donor cross-region correlation | §3.6 |
+| `27_cps_pathology_axes.py` | Continuous tau vs amyloid pseudo-progression axes, mutually adjusted; tau survives brain-wide, amyloid does not | §3.5 |
+| `28_qc_filter_sensitivity.py` | Mitochondrial and doublet filter curves per region and cohort; doublet removal does not weaken the co-occupancy | §3.5 |
 | `_data_paths.py` | Shared input-path resolution and preflight checks (`require()`); honours `RELN_RORB_DATA` |
 | `figure_style.py` | Minimal matplotlib styling helpers (appearance only) |
 
@@ -114,110 +118,77 @@ the current directory.
 - Per-stage and cross-region estimates use **donor-clustered** robust SEs.
 - Multiple-testing correction is Benjamini–Hochberg within each test battery.
 
-## Changes since the first public release (v1 → v3)
+## Changes since the first public release (v1 → v4)
 
-**Read this if you cloned v1.** Everything below is cumulative — v2.0 and v2.1 were
-prepared but never published, so this is the full diff against the only release that
-has been on GitHub. File-level summary: **11 files added, 4 modified, 0 removed**;
-the 19 other files are byte-identical to v1.
+**Read this if you cloned v1 or v3.0.** Diff against the published v3.0 tag: **4 files added, 6 modified, none removed**; the other 28 are byte-identical.
 
-### 1. A documentation error corrected — read this before modifying any script
+**Read this if you cloned v1 or v3.0.** v2.0 and v2.1 were never published. v3.0 was
+published and tagged. This release adds the ten-region reanalysis **and** a threshold
+patch that was prepared after v3.0 but never uploaded, so v4.0 carries both.
 
-v1's *Statistical approach* section stated that "a gene is scored positive at a raw
-count ≥ 1" as though one rule applied to every cohort. **That was wrong, and it
-mattered.** The two cohorts store marker values differently:
+### 1. Braak threshold made explicit (prepared after v3.0, first shipped here)
 
-- **Leng EC** (`leng2021_ec_full.h5ad`) holds genuine **raw counts** → positivity is `> 0`.
-- **SEA-AD extracts** (`seaad_*_extract.parquet`) hold **depth-normalised truncated**
-  values that *resemble* small counts → positivity is `>= 1` on that column, which at
-  SEA-AD depth corresponds to roughly ≥ 7 raw transcripts.
+`01_coexpression_same_cell.py` dichotomised AD status as `braak > 0`. A code reviewer
+correctly flagged that this would count Braak I as AD, which is wrong —
+transentorhinal-only tau is common in cognitively normal ageing.
 
-Applying the Leng rule to SEA-AD scores far more nuclei positive and destroys the
-prevalence matching between cohorts. The code in v1 was already correct — only the
-prose was wrong — so **no v1 result changes**. The rule is now documented in three
-places deliberately (this README, a warning block in `DATA.md`, and an inline comment
-at the thresholding lines), each with the diagnostic a skeptic can run: the rule
-reproduces RELN⁺ 13.3% / RORB⁺ 20.2% of MEC excitatory nuclei. Scripts 20–22 assert
-this on load and fail loudly rather than proceed on a mis-calibrated threshold.
+**No published result changes.** Verified across every cohort: no single-cell dataset
+here contains a Braak I donor (Leng 0/2/6; SEA-AD 0, II–VI across all ten regions and
+84 donors), so `braak > 0` and `braak >= 2` select identical nuclei — 0 of 10,780 in
+Leng change label, and every reported value is byte-identical. The only Braak I
+material is in the ADTBI bulk cohort (40 of 377 samples), which is analysed with
+continuous correlations and applies no dichotomy.
 
-### 2. Donor-clustered inference is now the reporting standard
+The threshold is now written `braak >= 2` with the rationale in a comment, plus an
+assertion that fails loudly if Braak I ever appears in the input. The guarantee comes
+from the code rather than from which cohorts happened to be used.
 
-v1 reported some cell-level p-values. With 10⁵–10⁶ nuclei from ~10²  donors these are
-anti-conservative by orders of magnitude — the effective sample size is the donor
-count, not the cell count. Every script now reports donor-clustered robust standard
-errors (`cov_type="cluster"`), and `04_staged_ec_replication.py` was modified to make
-the model specification explicit: **RORB-positivity is the outcome**, RELN-positivity
-and Braak stage the predictors. The reverse specification gives a different
-interaction OR (1.24 vs 1.48), so the direction is now stated rather than implied.
+### 2. Ten-region reanalysis (SEA-AD 2026-06-22 release)
 
-### 3. Seven new analyses (scripts 16–22)
+Four new scripts, 25–28. The scientific result that changed the manuscript: a
+region-level model flags two regions (MEC and MTG), but refitting **within subclass**
+separates them completely. MEC's double-positives are 97.7% entorhinal-IT, where
+24.19% of RORB⁺ nuclei are RELN⁺; MTG's are 84.6% L4 IT, where the figure is 0.44%
+and the within-subclass interaction is not significant. L4 IT is this study's own
+RORB-high/RELN-negative negative control. MTG is therefore a **contrast**, not a
+replication — a detection-floor drift in a very large RORB⁺ population, significant
+only because its denominator is 148,000 nuclei.
 
-Four were added in response to a review round, three in later work:
+Supporting results: the same-donor cross-region correlation is null (rho = −0.16,
+n = 74, CI excludes rho > 0.07), so MEC and MTG are not one donor-level process;
+continuous pathology axes separate tau from amyloid brain-wide where the ordinal
+variables could not; and the interaction survives every mitochondrial and doublet
+threshold tested.
 
-| Script | What it tests | Why it exists |
-|---|---|---|
-| `16_robustness_controls.py` | Binomial depth thinning to common depth, ambient-RNA floor with a ≥2 threshold, leave-one-donor-out, donor-label permutation | Removes rival explanations rather than adjusting for them — so its p-values are *larger* than the primary estimate's by construction |
-| `17_clustering_circularity.py` | Re-runs subtype clustering with RELN and RORB removed from the feature set entirely | The double-positive cluster was defined on features that can include the two genes being counted |
-| `18_rodriguez_reciprocal.py` | Reciprocal same-cell test in an independent onset cohort (GSE287652) | Note: the published object is integrated with this study's discovery cohort, so it **must be subset** or the replication is partly circular |
-| `19_within_donor_regional.py` | Within-donor MEC-vs-hippocampus spatial control | Removes between-donor variation from the regional claim |
-| `20_second_rorb_cluster.py` | The second RORB-high cluster (EC:Exc.5) is RELN-negative and double-positive-*depleted* | Internal negative control: rules out "RORB is just a proxy for a RELN-adjacent state" |
-| `21_oligodendrocyte_specificity.py` | RELN⁺ oligodendrocytes rise with Braak — but brain-wide, RELN-only, and tracking general burden rather than tau | Specificity control. The rise is present in primary visual cortex, where the neuronal convergence cannot be defined; the *pairing* is entorhinal-only |
-| `22_directionality_replication.py` | The conditional acquisition asymmetry **reverses** between cohorts while the convergence replicates | Documents why the manuscript withdraws its directional claim |
+### 3. Guards added because these mistakes were actually made
 
-### 4. Two claims withdrawn
+- **Filename guard (script 25).** `MTG/RNAseq/` holds two `*_final-nuclei.h5ad`
+  objects; the 2022 neurotypical **Reference** was downloaded before this was caught.
+  Both `SEAAD_` and `2026-06-22` are now required in every key.
+- **`MIN_DP = 10` (scripts 26, 28).** Hippocampus has 6 double-positive nuclei in
+  119,096 and returns OR 8.3 with a "significant" negative interaction if left
+  unguarded. Such cells report `UNESTIMABLE`, never an odds ratio.
+- **Braak map assertion (script 26).** An unmapped stage — Braak I above all — raises
+  rather than collapsing into a neighbouring stage.
+- **Donor-level standardisation (script 27).** CPS is a donor property, so "per SD"
+  uses donor moments; nucleus-weighting lets high-yield donors dominate the SD and
+  shifts the per-SD OR. Documented inline with both values.
 
-Both were in the manuscript, neither was ever in v1's code, but the scripts now
-document why they are gone:
+### 4. Documentation
 
-- **The directional refinement.** v1-era work read the acquisition asymmetry as "a
-  stable RORB⁺ identity acquiring RELN." Two problems: acquisition and differential
-  survival of RELN⁺RORB⁻ neurons predict the same cross-sectional pattern and cannot
-  be separated in autopsy tissue; and the direction reverses in the larger cohort
-  (script 22). Only the convergence itself replicates.
-- **Pooled cross-cohort magnitude.** Between-cohort heterogeneity is too high to
-  report a single pooled effect; `14_cross_cohort_meta.py` reports per-cohort
-  estimates with heterogeneity rather than a pooled diamond.
+`DATA.md` gains the 2026 release section: file layout, the 161 GB bandwidth warning,
+the two file-selection traps, the finding that the `all-nuclei` objects do **not**
+contain QC-failed expression, and an explicit warning not to mix the normalised and
+raw-UMI positivity rules. The per-cohort Braak table now states that stage I is
+absent across all ten regions, verified per region.
 
-### 5. Documentation added
+### Verification state
 
-- `CHANGELOG.md` — new file, per-release detail.
-- `DATA.md` — adds the GEO accession for the onset cohort (GSE287652) and the
-  positivity warning block; documents which marker columns carry which semantics.
-- `METHODS_PROVENANCE.md` — entries for scripts 16–22, including the design decisions
-  that are not obvious from the code (why robustness controls cost power, why the
-  onset cohort must be subset, why subclasses with fewer than ten double-positive
-  cells are reported as unestimable rather than quoted).
-
-### Verification state of this release
-
-Every script that has obtainable inputs has been **executed cold from a clean
-`data/` directory** — as a subprocess, not an interactive import — and reproduces
-the manuscript values:
-
-| Script | Cold-run result |
-|---|---|
-| `16_robustness_controls.py` | primary OR 1.481 (p = 1.5×10⁻³); LODO range 1.406–1.621; thinning 1.394 |
-| `17_clustering_circularity.py` | 5.28-fold with markers in the feature set, 5.06-fold with them removed |
-| `19_within_donor_regional.py` | MEC OR 1.991 (p = 1.1×10⁻³⁸) vs HPF 1.235 (p = 3.3×10⁻³) |
-| `20_second_rorb_cluster.py` | depth-controlled OR 68.0 [45.9–100.6]; L2/3 IT correctly flagged unestimable (7 DP cells) |
-| `21_oligodendrocyte_specificity.py` | oligodendrocyte 1.207 (p = 0.004), all other glia 0.88–0.96; four-region 1.19–1.30 |
-| `22_directionality_replication.py` | asymmetry reverses (Leng 1.430/1.076 vs SEA-AD 1.147/1.545) |
-
-`18_rodriguez_reciprocal.py` (renamed from `18_roussarie_reciprocal.py` — see CHANGELOG) could not be run end-to-end: its input derives from a
-~1.5 GB Seurat object that is not redistributable and must be downloaded from GEO
-(GSE287652) and reduced by the R snippet in its docstring. Its preflight check and
-model code are exercised; the reduction step is not.
-
-**Missing-input behaviour is now checked, not tracebacked.** All seven scripts share
-`analysis/_data_paths.py`, which resolves inputs through `require()` and exits with the
-filename, its approximate size, and the `DATA.md` section documenting its source —
-rather than a pandas or h5py traceback that names nothing. Verified: with an empty
-`data/`, all seven exit 1 with zero traceback lines and a named provenance pointer.
-Set `RELN_RORB_DATA` to read inputs from elsewhere:
-
-```bash
-RELN_RORB_DATA=/scratch/reln_rorb/data python analysis/16_robustness_controls.py
-```
+Scripts 26–28 were run cold as subprocesses from an empty `data/` directory (all
+three exit with named provenance, no tracebacks) and again with data present, where
+they reproduce the manuscript values exactly. Script 25's filename guard and live
+region resolution were tested directly; its 161 GB download path was exercised once
+during the original analysis but is not re-run on every change.
 
 ## Citation & license
 

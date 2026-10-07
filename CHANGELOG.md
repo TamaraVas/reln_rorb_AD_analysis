@@ -1,5 +1,33 @@
 # Changelog
 
+## v4.0 — ten-region reanalysis, plus the Braak threshold patch
+
+Carries two things: the SEA-AD 2026-06-22 ten-region reanalysis, and a threshold fix
+prepared after v3.0 that was never uploaded.
+
+**Added** (4 files)
+- `analysis/25_multiregion_extract.py` — streams the 161 GB ten-region release
+- `analysis/26_regional_subclass_analysis.py` — regional + subclass localisation, two donor cohorts
+- `analysis/27_cps_pathology_axes.py` — continuous tau vs amyloid axes
+- `analysis/28_qc_filter_sensitivity.py` — mitochondrial and doublet filter curves
+
+**Modified** (6 files)
+- `analysis/01_coexpression_same_cell.py` — AD group is now `braak >= 2`, with the
+  rationale in a comment and an assertion that fails if Braak I appears. **No published
+  value changes**: no single-cell cohort here has a Braak I donor, so the two thresholds
+  select identical nuclei (0 of 10,780 relabelled in Leng).
+- `analysis/_data_paths.py` — 12 new inputs registered with sizes and DATA.md sections
+- `README.md` — cumulative v1 → v4 changes section, four new script rows
+- `DATA.md` — 2026 release section, bandwidth warning, two file-selection traps, the
+  `all-nuclei` finding, positivity-rule warning; Braak table covers all ten regions
+- `METHODS_PROVENANCE.md` — addendum mapping scripts 25–28 to manuscript locations
+- `CHANGELOG.md` — this entry
+
+**Scientific consequence.** A region-level model flags MEC and MTG; refitting within
+subclass shows MEC's convergence is entorhinal-IT (24.19% of RORB⁺ nuclei RELN⁺) while
+MTG's sits in the L4 IT negative control (0.44%, not significant within subclass). MTG
+is reported as a contrast, not a replication.
+
 ## v3.0 — first release since v1
 
 **If you cloned v1, this is the release to read.** v2.0 and v2.1 were prepared but
@@ -49,6 +77,10 @@ version of this entry.
   `14_cross_cohort_meta.py` reports per-cohort estimates instead.
 
 ### Added after QC review
+- `analysis/01_coexpression_same_cell.py` — AD group threshold made explicit: `braak > 0` is now
+  `braak >= 2`, with an assertion that Braak I is absent. Behaviourally identical on the Leng
+  cohort (which contains only Braak 0, 2, 6), but a cohort containing Braak I would previously
+  have been classified as AD without warning. Braak stages per cohort are now tabulated in DATA.md.
 - `analysis/24_merfish_detection_controls.py` — measures MERFISH detection error from the control
   channels and separates decoding error (attenuating; corrected OR 2.47–2.55 against observed 2.45)
   from segmentation spillover (tested by segmentation method and by cell area).

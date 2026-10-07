@@ -104,6 +104,77 @@ the paths hard-coded (as relative `data/...`) in the scripts.
   have not yet been generated. No Braak or disease label attaches to either section.
 - Used by scripts 07 (MEC) and 19 (both).
 
+## SEA-AD Multiregion 2026 release (ten regions) — produced by script 25
+
+Public, no access agreement. Streamed from the SEA-AD S3 bucket by
+`analysis/25_multiregion_extract.py`, which downloads one object, extracts two gene
+columns plus per-nucleus QC metadata, writes a small parquet, and deletes the h5ad.
+
+| File | Size | Contents |
+|---|---|---|
+| `data/seaad2026_<REGION>_final.parquet` | 4–27 MB each | RELN/RORB (normalised **and** raw UMI) + 17 obs columns, per region |
+| `data/seaad2026_MEC_allnuclei.parquet` | ~19 MB | MEC "all-nuclei" object (see the warning below) |
+| `data/Global_and_Local_CPS.csv` | ~55 KB | donor-level continuous pseudo-progression scores, tau and amyloid, global and local |
+
+Ten regions: `MEC LEC HIP ITG MTG STG FI AnG PFC V1C`. 6,013,346 nuclei total, of
+which 3,110,538 are glutamatergic; 34–84 donors per region. That total equals the
+release's own `Used in analysis` count, which is a useful external check that the
+extraction lost nothing.
+
+**Bandwidth warning.** The source objects total **161 GB**. Script 25 holds one at a
+time (peak 39 GB) and skips regions already extracted, so it is resumable — but a
+cold run is a multi-hour download. The extracted parquets total ~135 MB, so extract
+once and keep them.
+
+**Two traps, both of which bit us:**
+
+1. **`MTG/RNAseq/` contains TWO `*_final-nuclei.h5ad` objects** — the 2026 SEA-AD
+   cohort (32.98 GB) and a 2022 neurotypical **Reference** (6.38 GB). Selecting the
+   first match silently picks the Reference, which has no AD staging and would enter
+   a regional comparison as a wrong-cohort ringer. Script 25 requires both `SEAAD_`
+   and `2026-06-22` in every filename and refuses anything else.
+2. **The prefrontal data is under `PFC/`**, and is labelled `DFC` in the per-nucleus
+   metadata. The `DFC/` and `DLPFC/` prefixes exist but are **empty placeholders**;
+   a plan built from those names silently drops the region.
+
+Related: do **not** enumerate the bucket by paginating all keys to discover which
+regions exist. It holds >500,000 objects, so a loop with any page cap under-reports
+regions. Use a delimiter-based prefix query (script 25's `lsdir`).
+
+**The `all-nuclei` objects do NOT contain the QC-failed nuclei.** Their cell counts
+are identical to `final-nuclei` (MEC 970,118 both; `Used in analysis` 100% True; LEC
+182,260 both), so expression for the ~2.6M QC-failed nuclei is **not distributed**.
+The multiregion `*_all-nuclei_cell-annotation.csv` (8,641,342 rows, 2,627,996 with
+`Used in analysis = False`) records which barcodes failed and under which gate, plus
+their taxonomy — but carries no expression. Per-subclass QC failure rates are
+therefore computable; a "does the convergence appear in discarded nuclei?" test is not.
+
+**Positivity.** Both normalised and raw-UMI values are stored for the two genes so
+either rule can be applied without re-downloading. The manuscript uses the
+normalised rule (`>= 1`), which reproduces the published prevalences exactly
+(MEC excitatory: RELN⁺ 13.339%, RORB⁺ 20.178%). The raw-UMI rule gives 36.6% / 44.3%
+in the same cells — a different threshold, not a robustness check. Do not mix them.
+
+## Braak stages present, per cohort
+
+Verified against the delivered objects, not taken from the source publications:
+
+| Cohort | Braak values present | Braak I present? |
+|---|---|---|
+| Leng 2021 EC (snRNA-seq) | 0, 2, 6 | no |
+| SEA-AD, all ten regions (2026 release) | 0, II, III, IV, V, VI | no — verified per region, 0 donors at stage I |
+| Allen ADTBI (bulk) | 0, 1, 2, 3, 4, 5, 6 | **yes — 40 of 377 samples** |
+
+**AD group definition.** Where a binary contrast is used (script 01 only), the AD group is
+**Braak >= 2**. Braak I is deliberately excluded from both groups: transentorhinal-only tau is
+common in cognitively normal aging and is not treated as AD here. The Leng cohort contains no
+Braak I donors, so this threshold is behaviourally identical to the `> 0` test used in the v3.0
+release, but the script now asserts the absence of Braak I rather than relying on it, so
+re-running on a cohort that does contain Braak I fails loudly instead of misclassifying it.
+
+ADTBI, the only cohort containing Braak I, is analysed with continuous Spearman correlations
+across all seven stages, so Braak I enters as stage 1 and no dichotomy applies.
+
 ## Derived files (produced by script 04, then consumed by others)
 
 - `data/cellclass_all_regions.csv` — per-region × cell-class interaction ORs. **Produced by 04**, consumed by 02 and 05.

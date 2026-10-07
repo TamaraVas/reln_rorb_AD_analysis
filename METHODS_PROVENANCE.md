@@ -202,3 +202,15 @@ test that discriminates the two explanations.
 
 The control-panel size is not recorded in the object, so the per-gene rate is bounded across
 plausible panel sizes rather than asserted, and every conclusion is drawn from the conservative end.
+
+## Addendum — scripts 25–28 (SEA-AD 2026 ten-region release)
+
+| Script | Manuscript location | Notes |
+|---|---|---|
+| `25_multiregion_extract.py` | §2 Methods, DATA.md | Extraction only, no inference. Filename guard against the 2022 Reference-MTG object. |
+| `26_regional_subclass_analysis.py` | §3.6 table, Suppl. Fig. S12 | Two donor cohorts; `MIN_DP = 10`; same-donor cross-region correlation. |
+| `27_cps_pathology_axes.py` | §3.5 continuous-axes paragraph, Suppl. Fig. S14c | Donor-level standardisation; both the brain-wide result and the local reversal reported. |
+| `28_qc_filter_sensitivity.py` | §3.5 QC paragraph, Suppl. Fig. S14a,b | Per-region mito/doublet curves; region-specific directions reported separately. |
+
+The `01_coexpression_same_cell.py` threshold patch (`braak > 0` → `braak >= 2`) affects
+no published value; see README section 1 and CHANGELOG v4.0.
