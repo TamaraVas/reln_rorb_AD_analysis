@@ -40,6 +40,18 @@ _PROVENANCE = {
     "oterogarcia_tangle_cells.parquet": ("~1 MB", "`data/oterogarcia_tangle_cells.parquet` — Otero-Garcia et al. tangle-sorted somata"),
     "adtbi_merged.parquet":       ("~2 MB",   "`data/adtbi_merged.parquet` — Allen Aging, Dementia & TBI bulk RNA-seq"),
     "Exc_neu_integrated_with_Leng.rds": ("~1.5 GB", "`data/rod_reln_rorb.parquet` — Rodriguez-Rodriguez et al. 2025 onset cohort"),
+    "seaad2026_MEC_final.parquet": ("~19 MB", "SEA-AD Multiregion 2026 release (ten regions) — produced by script 25"),
+    "seaad2026_LEC_final.parquet": ("~4 MB", "SEA-AD Multiregion 2026 release (ten regions) — produced by script 25"),
+    "seaad2026_HIP_final.parquet": ("~4 MB", "SEA-AD Multiregion 2026 release (ten regions) — produced by script 25"),
+    "seaad2026_ITG_final.parquet": ("~8 MB", "SEA-AD Multiregion 2026 release (ten regions) — produced by script 25"),
+    "seaad2026_MTG_final.parquet": ("~24 MB", "SEA-AD Multiregion 2026 release (ten regions) — produced by script 25"),
+    "seaad2026_STG_final.parquet": ("~11 MB", "SEA-AD Multiregion 2026 release (ten regions) — produced by script 25"),
+    "seaad2026_FI_final.parquet": ("~5 MB", "SEA-AD Multiregion 2026 release (ten regions) — produced by script 25"),
+    "seaad2026_AnG_final.parquet": ("~5 MB", "SEA-AD Multiregion 2026 release (ten regions) — produced by script 25"),
+    "seaad2026_PFC_final.parquet": ("~27 MB", "SEA-AD Multiregion 2026 release (ten regions) — produced by script 25"),
+    "seaad2026_V1C_final.parquet": ("~13 MB", "SEA-AD Multiregion 2026 release (ten regions) — produced by script 25"),
+    "seaad2026_MEC_allnuclei.parquet": ("~19 MB", "SEA-AD Multiregion 2026 release (ten regions) — produced by script 25"),
+    "Global_and_Local_CPS.csv": ("~55 KB", "SEA-AD Multiregion 2026 release (ten regions) — produced by script 25"),
 }
 
 

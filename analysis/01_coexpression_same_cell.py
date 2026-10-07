@@ -38,9 +38,18 @@ o["RORB_pos"] = col("RORB") >= 1
 o["logdepth"] = np.log10(o["nUMI"].astype(float).clip(lower=1))
 o["braak"] = o["BraakStage"].astype(int)
 exc = o[o["clusterCellType"].astype(str).str.contains("Exc")].copy()
-exc["AD"] = (exc.braak > 0).astype(int)          # normal = Braak 0; AD = Braak 2 + 6
+# AD group definition. Braak I is NOT counted as AD (transentorhinal-only tau is
+# common in cognitively normal aging); the AD group is Braak >= 2. This cohort
+# contains only Braak 0, 2 and 6, so `> 0` and `>= 2` coincide here -- but the
+# threshold is written explicitly, and asserted, so that re-running on any cohort
+# containing Braak I cannot silently misclassify those donors as AD.
+present = sorted(o["braak"].dropna().unique().tolist())
+assert 1 not in present, (
+    f"Braak I present in this object ({present}); revisit the AD definition "
+    "before proceeding -- Braak I is excluded from both groups by design.")
+exc["AD"] = (exc.braak >= 2).astype(int)         # normal = Braak 0; AD = Braak >= 2 (I excluded)
 inh = o[o["clusterCellType"].astype(str).str.contains("Inh")].copy()
-inh["AD"] = (inh.braak > 0).astype(int)
+inh["AD"] = (inh.braak >= 2).astype(int)
 
 def depth_or(df):
     if df.RELN_pos.sum() < 5 or df.RORB_pos.sum() < 5:
